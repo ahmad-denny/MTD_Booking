@@ -237,7 +237,7 @@ function drawChart(labels, values, isTop10) {
     const chartHeight = labels.length > 20 ? labels.length * 30 : labels.length * 45 + 100;
     document.getElementById('chart-container').style.height = chartHeight + "px";
     
-    const datasetLabel = isTop10 ? 'Performance (Top 10 Office - Jutaan)' : 'Performance (Jutaan)';
+    const datasetLabel = isTop10 ? 'Top10 Booking' : 'Booking';
 
     myChart = new Chart(ctx, {
         type: 'bar',
