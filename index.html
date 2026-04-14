@@ -207,13 +207,13 @@ function filterAndRender() {
         chartLabels = top10.map(e => e[0]);
         chartValues = top10.map(e => Math.round(e[1] / 1000000));
         
-        chartLabels.unshift("TOTAL REGION SUMATERA");
+        chartLabels.unshift("Total Region Sumatera");
         chartValues.unshift(Math.round(rawTotalRegion / 1000000));
     } else {
         chartLabels = entries.map(e => e[0]);
         chartValues = entries.map(e => Math.round(e[1] / 1000000));
         
-        chartLabels.unshift("TOTAL " + branchVal);
+        chartLabels.unshift("Total " + branchVal);
         chartValues.unshift(Math.round(rawTotalRegion / 1000000));
     }
 
