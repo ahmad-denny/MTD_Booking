@@ -13,7 +13,7 @@
 
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; background-color: #f0f2f5; padding: 20px; margin: 0; }
-        .container { width: 95%; max-width: 1200px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.08); }
+        .container { width: 95%; max-width: 1300px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.08); }
         
         .header-title { 
             color: white; 
@@ -37,18 +37,22 @@
 
         #chart-container { position: relative; width: 100%; margin: 20px auto; min-height: 300px; }
 
+        /* Tabel dengan lebar kolom seragam */
         .table-container { overflow-x: auto; margin-top: 20px; border-radius: 8px; border: 1px solid #eee; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th { background-color: #6a1b9a; color: white; padding: 12px 8px; position: sticky; top: 0; border: 1px solid #5e1689; }
-        td { padding: 10px; border: 1px solid #eee; text-align: left; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; } /* table-layout fixed membuat kolom sama besar */
+        th { background-color: #6a1b9a; color: white; padding: 12px 8px; position: sticky; top: 0; border: 1px solid #5e1689; word-wrap: break-word; }
+        td { padding: 10px; border: 1px solid #eee; text-align: left; word-wrap: break-word; }
         
         td.clickable { color: #6a1b9a; cursor: pointer; text-decoration: underline; font-weight: 500; }
         td.clickable:hover { background-color: #f3e5f5; color: #8e24aa; }
 
-        .text-right { text-align: right; font-family: 'Courier New', Courier, monospace; font-weight: bold; }
+        .text-right { text-align: right; font-family: 'Segoe UI', sans-serif; font-weight: bold; }
         tr:nth-child(even) { background-color: #f9f9f9; }
 
-        @media screen and (max-width: 768px) { .filter-container { flex-direction: column; align-items: stretch; } select, .btn { width: 100%; } }
+        /* Mengatur kolom pertama dan kedua sedikit lebih lebar jika diperlukan, sisanya rata */
+        th:nth-child(1), th:nth-child(2) { width: 15%; } 
+
+        @media screen and (max-width: 768px) { .filter-container { flex-direction: column; align-items: stretch; } select, .btn { width: 100%; } table { table-layout: auto; } }
     </style>
 </head>
 <body>
@@ -116,7 +120,6 @@ function cleanNumber(val) {
     return parseFloat(cleaned) || 0;
 }
 
-// FORMAT JUTAAN: Dibagi 1.000.000
 function formatJutaan(val) {
     const num = cleanNumber(val);
     if (num === 0) return "-";
@@ -190,7 +193,6 @@ function filterAndRender() {
     let labels = entries.map(e => e[0]);
     let rawValues = entries.map(e => e[1]);
 
-    // Konversi nilai ke jutaan untuk grafik
     let displayValues = rawValues.map(v => Math.round(v / 1000000));
 
     if (branchVal) {
@@ -229,7 +231,7 @@ function drawChart(labels, values) {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Total Booking dlm jutaan',
+                label: 'Performance (Jutaan)',
                 data: values,
                 backgroundColor: labels.map(l => l.includes('TOTAL') ? '#4E337E' : '#36A2EB'),
                 barPercentage: 0.7
@@ -243,7 +245,8 @@ function drawChart(labels, values) {
             scales: { 
                 x: { 
                     display: true, 
-                    title: { display: true, text: 'Jutaan Rupiah', font: { weight: 'bold' } } 
+                    grid: { display: false }, // HAPUS GRID VERTIKAL
+                    title: { display: true, text: 'Dalam Jutaan Rupiah', font: { weight: 'bold' } } 
                 }, 
                 y: { grid: { display: false } } 
             },
