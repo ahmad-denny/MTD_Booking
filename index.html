@@ -37,9 +37,8 @@
 
         #chart-container { position: relative; width: 100%; margin: 20px auto; min-height: 300px; }
 
-        /* Tabel dengan lebar kolom seragam */
         .table-container { overflow-x: auto; margin-top: 20px; border-radius: 8px; border: 1px solid #eee; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; } /* table-layout fixed membuat kolom sama besar */
+        table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
         th { background-color: #6a1b9a; color: white; padding: 12px 8px; position: sticky; top: 0; border: 1px solid #5e1689; word-wrap: break-word; }
         td { padding: 10px; border: 1px solid #eee; text-align: left; word-wrap: break-word; }
         
@@ -49,7 +48,6 @@
         .text-right { text-align: right; font-family: 'Segoe UI', sans-serif; font-weight: bold; }
         tr:nth-child(even) { background-color: #f9f9f9; }
 
-        /* Mengatur kolom pertama dan kedua sedikit lebih lebar jika diperlukan, sisanya rata */
         th:nth-child(1), th:nth-child(2) { width: 15%; } 
 
         @media screen and (max-width: 768px) { .filter-container { flex-direction: column; align-items: stretch; } select, .btn { width: 100%; } table { table-layout: auto; } }
@@ -190,21 +188,30 @@ function filterAndRender() {
     });
 
     let entries = Object.entries(officeMap).sort((a, b) => b[1] - a[1]);
-    let labels = entries.map(e => e[0]);
-    let rawValues = entries.map(e => e[1]);
+    
+    // VARIABEL UNTUK CHART
+    let chartLabels = [];
+    let chartValues = [];
+    const rawTotalRegion = entries.reduce((acc, curr) => acc + curr[1], 0);
 
-    let displayValues = rawValues.map(v => Math.round(v / 1000000));
-
-    if (branchVal) {
-        labels.unshift("Total " + branchVal);
-        displayValues.unshift(displayValues.reduce((a, b) => a + b, 0));
+    if (!branchVal) {
+        // JIKA SEMUA MAIN BRANCH: AMBIL TOP 10 SAJA UNTUK CHART
+        let top10 = entries.slice(0, 10);
+        chartLabels = top10.map(e => e[0]);
+        chartValues = top10.map(e => Math.round(e[1] / 1000000));
+        
+        chartLabels.unshift("TOTAL REGION SUMATERA");
+        chartValues.unshift(Math.round(rawTotalRegion / 1000000));
     } else {
-        const totalRegion = displayValues.reduce((a, b) => a + b, 0);
-        labels.unshift("Total Region Sumatera");
-        displayValues.unshift(totalRegion);
+        // JIKA BRANCH DIPILIH: TAMPILKAN SEMUA OFFICE BRANCH TERSEBUT
+        chartLabels = entries.map(e => e[0]);
+        chartValues = entries.map(e => Math.round(e[1] / 1000000));
+        
+        chartLabels.unshift("TOTAL " + branchVal);
+        chartValues.unshift(Math.round(rawTotalRegion / 1000000));
     }
 
-    drawChart(labels, displayValues);
+    drawChart(chartLabels, chartValues, !branchVal);
 
     const tableBody = document.getElementById('tableBody');
     tableBody.innerHTML = filtered.map(row => {
@@ -218,20 +225,23 @@ function filterAndRender() {
     }).join('');
 }
 
-function drawChart(labels, values) {
+function drawChart(labels, values, isTop10) {
     const ctx = document.getElementById('myBarChart').getContext('2d');
     if (myChart) myChart.destroy();
     
     const chartHeight = labels.length > 20 ? labels.length * 30 : labels.length * 45 + 100;
     document.getElementById('chart-container').style.height = chartHeight + "px";
     
+    // Tambahkan teks Top 10 ke judul dataset jika aktif
+    const datasetLabel = isTop10 ? 'Performance (Top 10 Office - Jutaan)' : 'Performance (Jutaan)';
+
     myChart = new Chart(ctx, {
         type: 'bar',
         plugins: [ChartDataLabels],
         data: {
             labels: labels,
             datasets: [{
-                label: 'Performance (Jutaan)',
+                label: datasetLabel,
                 data: values,
                 backgroundColor: labels.map(l => l.includes('TOTAL') ? '#4E337E' : '#36A2EB'),
                 barPercentage: 0.7
@@ -244,14 +254,14 @@ function drawChart(labels, values) {
             layout: { padding: { right: 80 } },
             scales: { 
                 x: { 
-                    display: false, 
-                    grid: { display: false }, // HAPUS GRID VERTIKAL
+                    display: true, 
+                    grid: { display: false },
                     title: { display: true, text: 'Dalam Jutaan Rupiah', font: { weight: 'bold' } } 
                 }, 
                 y: { grid: { display: false } } 
             },
             plugins: {
-                legend: { display: false },
+                legend: { display: true, position: 'top' },
                 datalabels: {
                     anchor: 'end', align: 'right', offset: 5, color: '#000',
                     font: { weight: 'bold', size: 11 },
