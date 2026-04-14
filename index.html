@@ -218,7 +218,7 @@ function exportToExcel() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Booking Performance");
     const branchName = document.getElementById('BranchFilter').value || "Region Sumatera";
-    XLSX.writeFile(wb, `Booking_${branchName}.xlsx`);
+    XLSX.writeFile(wb, `Booking ${branchName}.xlsx`);
 }
 
 function openPage() { window.location.href = 'https://m-direct.vercel.app/'; }
