@@ -213,11 +213,29 @@ function exportToExcel() {
         alert("Library Excel belum siap.");
         return;
     }
+
     const table = document.getElementById("dataTable");
     const ws = XLSX.utils.table_to_sheet(table);
+
+    // --- LOGIKA AUTOFIT KOLOM ---
+    const objectMaxLength = [];
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+    
+    rows.forEach((row) => {
+        row.forEach((val, i) => {
+            const columnValue = val ? val.toString() : "";
+            // Hitung panjang karakter
+            objectMaxLength[i] = Math.max(objectMaxLength[i] || 10, columnValue.length + 2);
+        });
+    });
+
+    // Terapkan lebar kolom ke worksheet
+    ws['!cols'] = objectMaxLength.map(w => ({ width: w }));
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Booking Performance");
-    const branchName = document.getElementById('BranchFilter').value || "Region Sumatera";
+
+    const branchName = document.getElementById('BranchFilter').value || "All Branch";
     XLSX.writeFile(wb, `Booking ${branchName}.xlsx`);
 }
 
