@@ -295,6 +295,15 @@ function resetFilter() {
 }
 
 function printTable() { window.print(); }
+function exportToExcel() {
+    const table = document.getElementById("dataTable");
+    const visibleRows = Array.from(table.rows).filter(r => r.style.display !== "none");
+    const data = visibleRows.map(row => Array.from(row.cells).filter((_, i) => i !== 1).map(c => c.textContent.trim()));
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Booking");
+    XLSX.writeFile(wb, "Booking_Performance_Sumatera.xlsx");
+}
 
 function openPage() { window.location.href = 'https://m-direct.vercel.app/'; }
 </script>
