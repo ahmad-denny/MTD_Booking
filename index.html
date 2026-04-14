@@ -196,11 +196,11 @@ function filterAndRender() {
     let displayValues = rawValues.map(v => Math.round(v / 1000000));
 
     if (branchVal) {
-        labels.unshift("TOTAL " + branchVal);
+        labels.unshift("Total " + branchVal);
         displayValues.unshift(displayValues.reduce((a, b) => a + b, 0));
     } else {
         const totalRegion = displayValues.reduce((a, b) => a + b, 0);
-        labels.unshift("TOTAL REGION SUMATERA");
+        labels.unshift("Total Region Sumatera");
         displayValues.unshift(totalRegion);
     }
 
