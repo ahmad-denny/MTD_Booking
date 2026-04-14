@@ -233,7 +233,7 @@ function drawChart(labels, values, isTop10) {
     document.getElementById('chart-container').style.height = chartHeight + "px";
     
     // Tambahkan teks Top 10 ke judul dataset jika aktif
-    const datasetLabel = isTop10 ? 'Performance (Top 10 Office - Jutaan)' : 'Performance (Jutaan)';
+    const datasetLabel = isTop10 ? 'Top 10 Office Booking' : 'Booking (dalam jutaan)';
 
     myChart = new Chart(ctx, {
         type: 'bar',
