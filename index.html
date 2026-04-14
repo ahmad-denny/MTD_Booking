@@ -217,7 +217,7 @@ function exportToExcel() {
     const ws = XLSX.utils.table_to_sheet(table);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Booking Performance");
-    const branchName = document.getElementById('BranchFilter').value || "All_Region";
+    const branchName = document.getElementById('BranchFilter').value || "Region Sumatera";
     XLSX.writeFile(wb, `Booking_${branchName}.xlsx`);
 }
 
