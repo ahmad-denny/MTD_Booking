@@ -25,11 +25,9 @@
         .header-title h2 { margin: 0; font-size: 22px; }
         .as-of-date { font-size: 14px; opacity: 0.9; font-weight: normal; display: block; margin-top: 5px; }
         
-        /* Filter Styles */
         .filter-container { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 20px; background: #f8f9fa; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e9ecef; }
         select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; outline: none; flex: 1; min-width: 150px; }
         
-        /* Button Styles */
         .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; color: white; }
         .reset-btn { background: #28a745; }
         .back-btn { background: #dc3545; }
@@ -39,13 +37,11 @@
 
         #chart-container { position: relative; width: 100%; margin: 20px auto; min-height: 300px; }
 
-        /* Table Styles */
         .table-container { overflow-x: auto; margin-top: 20px; border-radius: 8px; border: 1px solid #eee; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
         th { background-color: #6a1b9a; color: white; padding: 12px 8px; position: sticky; top: 0; border: 1px solid #5e1689; }
         td { padding: 10px; border: 1px solid #eee; text-align: left; }
         
-        /* Clickable Columns */
         td.clickable { color: #6a1b9a; cursor: pointer; text-decoration: underline; font-weight: 500; }
         td.clickable:hover { background-color: #f3e5f5; color: #8e24aa; }
 
@@ -120,9 +116,12 @@ function cleanNumber(val) {
     return parseFloat(cleaned) || 0;
 }
 
-function formatIndo(val) {
+// FORMAT JUTAAN: Dibagi 1.000.000
+function formatJutaan(val) {
     const num = cleanNumber(val);
-    return num === 0 ? "-" : num.toLocaleString('id-ID');
+    if (num === 0) return "-";
+    const jutaan = Math.round(num / 1000000);
+    return jutaan.toLocaleString('id-ID');
 }
 
 function initializeDashboard() {
@@ -189,21 +188,21 @@ function filterAndRender() {
 
     let entries = Object.entries(officeMap).sort((a, b) => b[1] - a[1]);
     let labels = entries.map(e => e[0]);
-    let values = entries.map(e => e[1]);
+    let rawValues = entries.map(e => e[1]);
 
-    // LOGIKA TOTAL DYNAMIS
+    // Konversi nilai ke jutaan untuk grafik
+    let displayValues = rawValues.map(v => Math.round(v / 1000000));
+
     if (branchVal) {
-        // Jika pilih Main Branch tertentu
         labels.unshift("TOTAL " + branchVal);
-        values.unshift(values.reduce((a, b) => a + b, 0));
+        displayValues.unshift(displayValues.reduce((a, b) => a + b, 0));
     } else {
-        // Jika pilih "Semua Main Branch" (Tampilkan Total Region Sumatera)
-        const totalRegion = values.reduce((a, b) => a + b, 0);
+        const totalRegion = displayValues.reduce((a, b) => a + b, 0);
         labels.unshift("TOTAL REGION SUMATERA");
-        values.unshift(totalRegion);
+        displayValues.unshift(totalRegion);
     }
 
-    drawChart(labels, values);
+    drawChart(labels, displayValues);
 
     const tableBody = document.getElementById('tableBody');
     tableBody.innerHTML = filtered.map(row => {
@@ -211,7 +210,7 @@ function filterAndRender() {
             const isNumber = ["TOTAL", "EMAS", "MULTIGUNA", "PROHAJJ", "KPR", "NON CONSUMER"].includes(key.toUpperCase());
             if (key === "Main Branch") return `<td class="clickable" onclick="clickToFilter('BranchFilter', '${val}')">${val}</td>`;
             if (key === "Office") return `<td class="clickable" onclick="clickToFilter('OfficeFilter', '${val}')">${val}</td>`;
-            return isNumber ? `<td class="text-right">${formatIndo(val)}</td>` : `<td>${val}</td>`;
+            return isNumber ? `<td class="text-right">${formatJutaan(val)}</td>` : `<td>${val}</td>`;
         }).join('');
         return `<tr>${cells}</tr>`;
     }).join('');
@@ -221,7 +220,6 @@ function drawChart(labels, values) {
     const ctx = document.getElementById('myBarChart').getContext('2d');
     if (myChart) myChart.destroy();
     
-    // Sesuaikan tinggi chart agar label tidak tumpang tindih
     const chartHeight = labels.length > 20 ? labels.length * 30 : labels.length * 45 + 100;
     document.getElementById('chart-container').style.height = chartHeight + "px";
     
@@ -231,8 +229,8 @@ function drawChart(labels, values) {
         data: {
             labels: labels,
             datasets: [{
+                label: 'Performance (Jutaan)',
                 data: values,
-                // Bar Total diberi warna berbeda (Ungu Tua) agar mencolok
                 backgroundColor: labels.map(l => l.includes('TOTAL') ? '#4E337E' : '#36A2EB'),
                 barPercentage: 0.7
             }]
@@ -241,13 +239,19 @@ function drawChart(labels, values) {
             indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
-            layout: { padding: { right: 150 } },
-            scales: { x: { display: false }, y: { grid: { display: false } } },
+            layout: { padding: { right: 80 } },
+            scales: { 
+                x: { 
+                    display: true, 
+                    title: { display: true, text: 'Dalam Jutaan Rupiah', font: { weight: 'bold' } } 
+                }, 
+                y: { grid: { display: false } } 
+            },
             plugins: {
                 legend: { display: false },
                 datalabels: {
-                    anchor: 'end', align: 'right', offset: 10, color: '#000',
-                    font: { weight: 'bold' },
+                    anchor: 'end', align: 'right', offset: 5, color: '#000',
+                    font: { weight: 'bold', size: 11 },
                     formatter: (v) => v.toLocaleString('id-ID')
                 }
             }
