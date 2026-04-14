@@ -24,6 +24,7 @@
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
         th { background-color: #6a1b9a; color: white; padding: 12px 8px; position: sticky; top: 0; border: 1px solid #5e1689; }
         td { padding: 10px; border: 1px solid #eee; text-align: left; }
+        .text-right { text-align: right; } /* Untuk merapikan angka ke kanan */
         tr:nth-child(even) { background-color: #f9f9f9; }
         @media screen and (max-width: 768px) { .filter-container { flex-direction: column; align-items: stretch; } select, .btn { width: 100%; } }
     </style>
@@ -34,33 +35,24 @@
     <h2>M-Booking Performance Region Sumatera</h2>
     
     <div class="filter-container">
-        <select id="BranchFilter">
-            <option value="">Semua Main Branch</option>
-        </select>
-        <select id="OfficeFilter">
-            <option value="">Semua Office</option>
-        </select>
+        <select id="BranchFilter"><option value="">Semua Main Branch</option></select>
+        <select id="OfficeFilter"><option value="">Semua Office</option></select>
         <select id="ActivityStatusFilter">
             <option value="all">Semua Booking</option>
             <option value="active">Ada Booking</option>
             <option value="inactive">Tidak Ada Booking</option>
         </select>
-        
         <button class="btn reset-btn" onclick="resetFilter()">Reset</button>
         <button class="btn print-btn" onclick="printTable()">Print</button>
         <button class="btn export-btn" onclick="exportToExcel()">Export XLS</button>
         <button class="btn back-btn" onclick="openPage()">M-Direct</button>
     </div>
 
-    <div id="chart-container">
-        <canvas id="myBarChart"></canvas>
-    </div>
+    <div id="chart-container"><canvas id="myBarChart"></canvas></div>
 
     <div class="table-container">
         <table id="dataTable">
-            <thead>
-                <tr id="tableHead"></tr>
-            </thead>
+            <thead><tr id="tableHead"></tr></thead>
             <tbody id="tableBody"></tbody>
         </table>
     </div>
@@ -71,11 +63,19 @@ const ChartDataLabels = window.ChartDataLabels;
 let myChart = null;
 let tableData = [];
 
+// Fungsi membersihkan angka dari format ribuan agar bisa diproses matematik
 function cleanNumber(val) {
     if (typeof val === 'number') return val;
     if (!val || val === "-" || val === "") return 0;
     let cleaned = val.toString().replace(/,/g, '');
     return parseFloat(cleaned) || 0;
+}
+
+// Fungsi memformat angka kembali ke format Indonesia (1.000.000)
+function formatIndo(val) {
+    const num = cleanNumber(val);
+    if (num === 0) return "-";
+    return num.toLocaleString('id-ID');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -85,9 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tableData = data;
             initializeDashboard();
         })
-        .catch(err => {
-            console.error("Gagal load JSON:", err);
-        });
+        .catch(err => console.error("Gagal load JSON:", err));
 });
 
 function initializeDashboard() {
@@ -135,6 +133,7 @@ function filterAndRender() {
         return matchBranch && matchOffice && matchStatus;
     });
 
+    // Update Chart
     const officeMap = {};
     filtered.forEach(row => {
         const val = cleanNumber(row['Total']);
@@ -151,9 +150,20 @@ function filterAndRender() {
     }
 
     drawChart(labels, values);
-    document.getElementById('tableBody').innerHTML = filtered.map(row => 
-        `<tr>${Object.values(row).map(v => `<td>${v}</td>`).join('')}</tr>`
-    ).join('');
+
+    // Update Table dengan Format Ribuan
+    const tableBody = document.getElementById('tableBody');
+    tableBody.innerHTML = filtered.map(row => {
+        let cells = Object.entries(row).map(([key, val]) => {
+            // Jika kolom adalah Total atau kolom angka lainnya, beri format ribuan & rata kanan
+            const isNumberColumn = ["Total", "EMAS", "MULTIGUNA", "PROHAJJ", "NON CONSUMER", "KPR"].includes(key.toUpperCase());
+            if (isNumberColumn) {
+                return `<td class="text-right">${formatIndo(val)}</td>`;
+            }
+            return `<td>${val}</td>`;
+        }).join('');
+        return `<tr>${cells}</tr>`;
+    }).join('');
 }
 
 function drawChart(labels, values) {
@@ -200,7 +210,7 @@ function printTable() { window.print(); }
 
 function exportToExcel() {
     if (typeof XLSX === 'undefined') {
-        alert("Library Excel belum siap. Pastikan koneksi internet aktif.");
+        alert("Library Excel belum siap.");
         return;
     }
     const table = document.getElementById("dataTable");
