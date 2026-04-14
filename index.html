@@ -286,6 +286,7 @@ function drawChart(labels, values) {
                 y: { 
                     grid: { display: false },
                     ticks: {
+                        display: false,
                         font: (context) => ({
                             weight: context.tick.label.toString().includes('TOTAL') ? 'bold' : 'normal',
                             size: 12
