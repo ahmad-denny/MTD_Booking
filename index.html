@@ -71,13 +71,7 @@
             <option value="bottom10">Bottom 10 Booking</option>
             <option value="all">Semua Data</option>
         </select>
-
-        <select id="ActivityStatusFilter">
-            <option value="all">Semua Booking</option>
-            <option value="active">Ada Booking</option>
-            <option value="inactive">Tidak Ada Booking</option>
-        </select>
-    
+        
         <button class="btn reset-btn" onclick="resetFilter()">Reset</button>
         <button class="btn print-btn" onclick="printTable()">Print</button>
         <button class="btn export-btn" onclick="exportToExcel()">Export XLS</button>
@@ -145,7 +139,6 @@ function initializeDashboard() {
     });
     document.getElementById('OfficeFilter').addEventListener('change', filterAndRender);
     document.getElementById('RankFilter').addEventListener('change', filterAndRender);
-    document.getElementById('ActivityStatusFilter').addEventListener('change', filterAndRender);
     filterAndRender();
 }
 
@@ -183,31 +176,22 @@ function filterAndRender() {
     const branchVal = document.getElementById('BranchFilter').value;
     const officeVal = document.getElementById('OfficeFilter').value;
     const rankVal = document.getElementById('RankFilter').value;
-    const statusVal = document.getElementById('ActivityStatusFilter').value;
     const headerElem = document.getElementById('mainHeader');
 
-    // Filter data dasar
     let filtered = tableData.filter(row => {
         const matchBranch = !branchVal || row['Main Branch'] === branchVal;
         const matchOffice = !officeVal || row['Office'] === officeVal;
-        const totalNum = cleanNumber(row['Total']);
-        const matchStatus = statusVal === 'all' || 
-                           (statusVal === 'active' && totalNum > 0) || 
-                           (statusVal === 'inactive' && totalNum === 0);
-        return matchBranch && matchOffice && matchStatus;
+        return matchBranch && matchOffice;
     });
 
-    // Mapping untuk agregasi chart per Office
     const officeMap = {};
     filtered.forEach(row => {
         const val = cleanNumber(row['Total']);
         officeMap[row['Office']] = (officeMap[row['Office']] || 0) + val;
     });
 
-    // Sort entries berdasarkan value (descending)
     let sortedEntries = Object.entries(officeMap).sort((a, b) => b[1] - a[1]);
 
-    // Tentukan Judul dan Data Chart berdasarkan Rank Filter
     let rankText = "";
     let finalChartEntries = sortedEntries;
 
@@ -215,12 +199,10 @@ function filterAndRender() {
         finalChartEntries = sortedEntries.slice(0, 10);
         rankText = "Top 10 ";
     } else if (rankVal === 'bottom10') {
-        // Ambil 10 terbawah dari data yang sudah disort descending (diambil dari belakang)
-        finalChartEntries = sortedEntries.slice(-10).reverse(); // Reverse agar urutan tampil masuk akal di Bar Chart
+        finalChartEntries = sortedEntries.slice(-10).reverse();
         rankText = "Bottom 10 ";
     }
 
-    // Update Judul
     let dynamicTitle = rankText + "Booking Performance";
     if (!branchVal && !officeVal) {
         dynamicTitle += " Region Sumatera";
@@ -233,18 +215,15 @@ function filterAndRender() {
     }
     headerElem.innerText = dynamicTitle;
 
-    // Persiapkan Label dan Value Chart
     let chartLabels = finalChartEntries.map(e => e[0]);
     let chartValues = finalChartEntries.map(e => Math.round(e[1] / 1000000));
 
-    // Tambahkan Total Sumatera sebagai pembanding di paling atas
     const grandTotalSumatera = tableData.reduce((acc, curr) => acc + cleanNumber(curr['Total']), 0);
     chartLabels.unshift("TOTAL REGION SUMATERA");
     chartValues.unshift(Math.round(grandTotalSumatera / 1000000));
 
     drawChart(chartLabels, chartValues);
 
-    // Update Tabel (Tabel tetap menampilkan semua data hasil filter tanpa potongan Top/Bottom)
     const tableBody = document.getElementById('tableBody');
     tableBody.innerHTML = filtered.map(row => {
         let cells = Object.entries(row).map(([key, val]) => {
@@ -347,8 +326,7 @@ async function exportToExcel() {
 function resetFilter() {
     document.getElementById('BranchFilter').value = "";
     document.getElementById('OfficeFilter').value = "";
-    document.getElementById('RankFilter').value = "top10"; // Kembali ke default Top 10
-    document.getElementById('ActivityStatusFilter').value = "all";
+    document.getElementById('RankFilter').value = "top10";
     updateOfficeFilter("");
     filterAndRender();
 }
