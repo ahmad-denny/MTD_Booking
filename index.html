@@ -3,44 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Booking Performance Region Sumatera</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <title>Booking Performance Sumatera</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; background-color: #f0f2f5; padding: 20px; margin: 0; }
-        .container { width: 95%; max-width: 1200px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.08); }
-        #chart-container { position: relative; width: 100%; margin: 20px auto; min-height: 400px; }
-        h2 { color: white; background: linear-gradient(90deg, #6a1b9a, #8e24aa); padding: 15px; border-radius: 8px; margin-top: 0; }
-        .filter-container { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 20px; background: #f8f9fa; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e9ecef; }
-        select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; flex: 1; min-width: 150px; }
-        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; }
-        .reset-btn { background: #28a745; }
-        .back-btn { background: #dc3545; }
-        .print-btn { background: #6f42c1; }
-        .table-container { overflow-x: auto; margin-top: 20px; border-radius: 8px; border: 1px solid #eee; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th { background-color: #6a1b9a; color: white; padding: 12px 8px; position: sticky; top: 0; border: 1px solid #5e1689; }
-        td { padding: 10px; border: 1px solid #eee; text-align: left; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
+        body { font-family: sans-serif; background: #f4f4f4; padding: 20px; }
+        .container { background: white; padding: 20px; border-radius: 12px; max-width: 1200px; margin: auto; }
+        #chart-container { position: relative; width: 100%; margin-top: 20px; }
+        .filter-container { display: flex; gap: 10px; margin-bottom: 20px; }
+        select { padding: 10px; border-radius: 5px; border: 1px solid #ccc; flex: 1; }
+        .table-container { margin-top: 20px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background: #6a1b9a; color: white; padding: 10px; border: 1px solid #ddd; }
+        td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+        tr:nth-child(even) { background: #f9f9f9; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Booking Performance Region Sumatera - April 2026</h2>
     <div class="filter-container">
-        <select id="BranchFilter"><option value="">Semua Main Branch</option></select>
+        <select id="BranchFilter"><option value="">Semua Branch</option></select>
         <select id="OfficeFilter"><option value="">Semua Office</option></select>
-        <select id="ActivityStatusFilter">
-            <option value="all">Semua Aktifitas</option>
-            <option value="active">Ada Aktifitas</option>
-            <option value="inactive">Tidak Ada Aktifitas</option>
-        </select>
-        <button class="btn reset-btn" onclick="resetFilter()">Reset</button>
-        <button class="btn print-btn" onclick="printTable()">Print</button>
-        <button class="btn back-btn" onclick="openPage()">M-Direct</button>
+        <button onclick="resetFilter()" style="padding:10px 20px; cursor:pointer;">Reset</button>
     </div>
 
     <div id="chart-container">
@@ -48,7 +33,7 @@
     </div>
 
     <div class="table-container">
-        <table id="dataTable">
+        <table>
             <thead><tr id="tableHead"></tr></thead>
             <tbody id="tableBody"></tbody>
         </table>
@@ -56,104 +41,76 @@
 </div>
 
 <script>
-const ChartDataLabels = window.ChartDataLabels;
-let myChart = null;
 let tableData = [];
+let myChart = null;
 
-// --- PERBAIKAN LOGIKA ANGKA ---
+// --- SOLUSI UTAMA: Fungsi Pembersih Angka (Menghapus Koma Ribuan) ---
 function cleanNumber(val) {
     if (typeof val === 'number') return val;
-    if (!val || val === "-" || val === "") return 0;
+    if (!val || val === "-") return 0;
     
-    let str = val.toString().trim();
-    
-    // Jika formatnya 1.165.595 (titik sebagai ribuan)
-    // Kita hilangkan semua titik agar menjadi 1165595
-    if (str.includes('.') && str.includes(',')) {
-        // Format Internasional dengan koma desimal: 1.165.595,00
-        str = str.replace(/\./g, '').replace(',', '.');
-    } else if (str.includes('.') && !str.includes(',')) {
-        // Asumsi titik adalah ribuan jika digit di belakang titik ada 3
-        const parts = str.split('.');
-        if (parts[parts.length - 1].length === 3) {
-            str = str.replace(/\./g, '');
-        }
-    }
-    
-    return parseFloat(str) || 0;
+    // Hapus tanda koma (,) karena di data Anda koma adalah pemisah ribuan
+    // Contoh: "1,038,390,113" menjadi "1038390113"
+    let cleaned = val.toString().replace(/,/g, '');
+    return parseFloat(cleaned) || 0;
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    fetch('Dataset.json')
-        .then(res => res.json())
-        .then(data => {
-            tableData = data;
-            initializeDashboard();
-        })
-        .catch(() => {
-            // Contoh data untuk simulasi 2.2M
-            tableData = [
-                {"Main Branch": "BENGKULU", "Office": "JAMBI", "Total": "1.165.595"},
-                {"Main Branch": "BENGKULU", "Office": "KCP CURUP", "Total": "1.100.000"}, // Tambahan agar jadi 2.2M
-                {"Main Branch": "BENGKULU", "Office": "KCP MUARA BUNGO", "Total": "328.064"}
-            ];
-            initializeDashboard();
-        });
+document.addEventListener('DOMContentLoaded', () => {
+    // Simulasi data sesuai gambar Anda
+    tableData = [
+        {"Main Branch": "BENGKULU", "Office": "BENGKULU", "Total": "1,038,390,113"},
+        {"Main Branch": "BENGKULU", "Office": "KCP CURUP", "Total": "340,565,765"},
+        {"Main Branch": "BENGKULU", "Office": "KCP ARGA MAKMUR", "Total": "-"},
+        {"Main Branch": "BENGKULU", "Office": "KCP MANNA BENGKULU", "Total": "42,380,689"},
+        {"Main Branch": "BENGKULU", "Office": "JAMBI", "Total": "453,548,464"},
+        {"Main Branch": "BENGKULU", "Office": "KCP MUARA BUNGO", "Total": "328,064,988"}
+    ];
+    init();
 });
 
-function initializeDashboard() {
-    if (tableData.length > 0) {
-        const columns = Object.keys(tableData[0]);
-        document.getElementById('tableHead').innerHTML = columns.map(col => `<th>${col}</th>`).join('');
-        
-        const branches = [...new Set(tableData.map(d => d['Main Branch']))];
-        const branchSelect = document.getElementById('BranchFilter');
-        branchSelect.innerHTML = '<option value="">Semua Main Branch</option>' + 
-            branches.sort().map(b => `<option value="${b}">${b}</option>`).join('');
-    }
+function init() {
+    const columns = Object.keys(tableData[0]);
+    document.getElementById('tableHead').innerHTML = columns.map(c => `<th>${c}</th>`).join('');
     
-    document.querySelectorAll('select').forEach(s => s.addEventListener('change', filterData));
-    filterData();
+    const branches = [...new Set(tableData.map(d => d['Main Branch']))];
+    document.getElementById('BranchFilter').innerHTML += branches.map(b => `<option value="${b}">${b}</option>`).join('');
+    
+    document.getElementById('BranchFilter').addEventListener('change', update);
+    document.getElementById('OfficeFilter').addEventListener('change', update);
+    update();
 }
 
-function filterData() {
-    const branchVal = document.getElementById('BranchFilter').value;
-    const officeVal = document.getElementById('OfficeFilter').value;
-    const statusVal = document.getElementById('ActivityStatusFilter').value;
+function update() {
+    const bVal = document.getElementById('BranchFilter').value;
+    const oVal = document.getElementById('OfficeFilter').value;
 
-    const filtered = tableData.filter(row => {
-        const matchBranch = !branchVal || row['Main Branch'] === branchVal;
-        const matchOffice = !officeVal || row['Office'] === officeVal;
-        const total = cleanNumber(row['Total']);
-        const matchStatus = statusVal === 'all' || (statusVal === 'active' && total > 0) || (statusVal === 'inactive' && total === 0);
-        return matchBranch && matchOffice && matchStatus;
+    const filtered = tableData.filter(d => (!bVal || d['Main Branch'] === bVal) && (!oVal || d['Office'] === oVal));
+    
+    // Hitung Map untuk Chart
+    const map = {};
+    filtered.forEach(d => {
+        const val = cleanNumber(d['Total']);
+        map[d['Office']] = (map[d['Office']] || 0) + val;
     });
 
-    renderChart(filtered, branchVal);
-    renderTable(filtered);
-}
-
-function renderChart(data, branchVal) {
-    const officeMap = {};
-    data.forEach(row => {
-        const val = cleanNumber(row['Total']);
-        officeMap[row['Office']] = (officeMap[row['Office']] || 0) + val;
-    });
-
-    let entries = Object.entries(officeMap).sort((a, b) => b[1] - a[1]);
+    let entries = Object.entries(map).sort((a, b) => b[1] - a[1]);
     let labels = entries.map(e => e[0]);
     let values = entries.map(e => e[1]);
 
-    if (branchVal) {
-        const total = values.reduce((a, b) => a + b, 0);
-        labels.unshift("TOTAL " + branchVal);
-        values.unshift(total);
+    if (bVal) {
+        labels.unshift("TOTAL " + bVal);
+        values.unshift(values.reduce((a, b) => a + b, 0));
     }
 
+    renderChart(labels, values);
+    renderTable(filtered);
+}
+
+function renderChart(labels, values) {
     const ctx = document.getElementById('myBarChart').getContext('2d');
     if (myChart) myChart.destroy();
 
-    document.getElementById('chart-container').style.height = (labels.length * 40 + 100) + "px";
+    document.getElementById('chart-container').style.height = (labels.length * 45 + 100) + "px";
 
     myChart = new Chart(ctx, {
         type: 'bar',
@@ -162,7 +119,7 @@ function renderChart(data, branchVal) {
             labels: labels,
             datasets: [{
                 data: values,
-                backgroundColor: labels.map(l => l.startsWith('TOTAL') ? '#4E337E' : '#36A2EB'),
+                backgroundColor: labels.map(l => l.includes('TOTAL') ? '#4E337E' : '#36A2EB'),
                 barPercentage: 0.8
             }]
         },
@@ -170,16 +127,22 @@ function renderChart(data, branchVal) {
             indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
-            layout: { padding: { right: 120 } }, // RUANG AGAR ANGKA TIDAK TERPOTONG
-            scales: { x: { display: false }, y: { grid: { display: false } } },
+            layout: { 
+                padding: { right: 150 } // Ruang ekstra agar angka Miliar tidak terpotong
+            },
+            scales: { 
+                x: { display: false }, 
+                y: { grid: { display: false }, ticks: { font: { size: 10 } } } 
+            },
             plugins: {
                 legend: { display: false },
                 datalabels: {
                     anchor: 'end',
                     align: 'right',
-                    offset: 10, // JARAK ANGKA DARI BAR
+                    offset: 10,
                     color: '#000',
-                    font: { weight: 'bold' },
+                    font: { weight: 'bold', size: 11 },
+                    // Format tampilan angka dengan titik pemisah ribuan di Chart
                     formatter: (v) => v.toLocaleString('id-ID')
                 }
             }
@@ -196,12 +159,8 @@ function renderTable(data) {
 function resetFilter() {
     document.getElementById('BranchFilter').value = "";
     document.getElementById('OfficeFilter').value = "";
-    document.getElementById('ActivityStatusFilter').value = "all";
-    filterData();
+    update();
 }
-
-function printTable() { window.print(); }
-function openPage() { window.location.href = 'https://m-direct.vercel.app/'; }
 </script>
 </body>
 </html>
