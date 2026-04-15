@@ -252,3 +252,54 @@ function filterAndRender() {
             let attr = key === 'Main Branch' ? `onclick="clickToFilter('BranchFilter', '${val}')"` : (key === 'Office' ? `onclick="clickToFilter('OfficeFilter', '${val}')"` : '');
             return `<td class="${cls}" ${attr} data-label="${key}">${display}</td>`;
         }).join('')}</tr>`;
+    }).join('');
+}
+
+function drawChart(labels, values, details) {
+    const ctx = document.getElementById('myBarChart').getContext('2d');
+    if (myChart) myChart.destroy();
+    document.getElementById('chart-container').style.height = (labels.length * 35 + 80) + "px";
+
+    myChart = new Chart(ctx, {
+        type: 'bar',
+        plugins: [ChartDataLabels],
+        data: {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: labels.map(l => l.includes('TOTAL') ? '#2E1A47' : '#36A2EB'),
+                barPercentage: 0.7,
+                details: details
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: { padding: { right: 80 } },
+            scales: { x: { display: false }, y: { grid: { display: false }, ticks: { font: { size: 11 } } } },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            const d = ctx.dataset.details[ctx.dataIndex];
+                            const f = (n) => Math.round(n/1000000).toLocaleString('id-ID') + " Jt";
+                            return [`Total: ${ctx.raw} Jt`, `---`, `Emas: ${f(d.emas)}`, `Multiguna: ${f(d.multiguna)}`, `Prohajj: ${f(d.prohajj)}`, `KPR: ${f(d.kpr)}`, `Non Consumer: ${f(d.nonCon)}`];
+                        }
+                    }
+                },
+                datalabels: {
+                    anchor: 'end', align: 'right', offset: 5, font: { weight: 'bold', size: 11 },
+                    formatter: (v) => v.toLocaleString('id-ID') + " Jt"
+                }
+            }
+        }
+    });
+}
+
+function resetFilter() { location.reload(); }
+function openPage() { window.location.href = 'https://m-direct.vercel.app/'; }
+</script>
+</body>
+</html>
