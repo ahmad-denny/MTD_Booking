@@ -128,7 +128,7 @@ function init() {
     document.getElementById('tableHead').innerHTML = cols.map(c => `<th>${c.trim()}</th>`).join('');
     
     const branches = [...new Set(tableData.map(d => getVal(d, 'Main Branch').trim()))].filter(v => v).sort();
-    document.getElementById('BranchFilter').innerHTML = '<option value="">Semua Main Branch</option>' + 
+    document.getElementById('BranchFilter').innerHTML = '<option value="">Top 10 Booking</option>' + 
         branches.map(v => `<option value="${v}">${v}</option>`).join('');
     
     document.getElementById('BranchFilter').addEventListener('change', updateOfficeDropdown);
