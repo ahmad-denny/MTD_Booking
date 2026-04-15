@@ -17,12 +17,12 @@
         .header-title { 
             color: white; 
             background: linear-gradient(90deg, #6a1b9a, #8e24aa); 
-            padding: 20px; 
+            padding: 15px; 
             border-radius: 8px; 
             margin-bottom: 20px;
         }
         .header-title h2 { margin: 0; font-size: 20px; font-weight: bold; }
-        .as-of-date { font-size: 13px; opacity: 0.9; display: block; margin-top: 8px; }
+        .as-of-date { font-size: 13px; opacity: 0.9; display: block; margin-top: 5px; }
         
         .filter-container { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 15px; background: #f8f9fa; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e9ecef; }
         select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; outline: none; flex: 1; min-width: 150px; font-size: 14px; }
@@ -30,31 +30,27 @@
         .btn { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; color: white; font-size: 13px; }
         .reset-btn { background: #28a745; }
         .back-btn { background: #dc3545; }
-        .print-btn { background: #6f42c1; }
         .export-btn { background: #f39c12; }
         .btn:hover { opacity: 0.8; }
 
         #chart-container { position: relative; width: 100%; margin: 20px auto; min-height: 300px; }
 
         /* TABEL DESKTOP */
-        .table-container { margin-top: 20px; border-radius: 8px; overflow: hidden; }
+        .table-container { margin-top: 20px; border-radius: 8px; overflow: hidden; border: 1px solid #eee; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
         th { background-color: #6a1b9a; color: white; padding: 12px 8px; border: 1px solid #5e1689; }
         td { padding: 10px; border: 1px solid #eee; text-align: left; }
-        td.clickable { color: #6a1b9a; cursor: pointer; text-decoration: underline; font-weight: 500; }
+        td.clickable { color: #6a1b9a; cursor: pointer; text-decoration: underline; font-weight: 600; }
         .text-right { text-align: right; font-weight: bold; }
         tr:nth-child(even) { background-color: #f9f9f9; }
 
-        /* RESPONSIVE SMARTPHONE (MOBILE) - VERSI RAPAT */
+        /* RESPONSIVE SMARTPHONE (MOBILE) - VERSI RAPAT & RINGKAS */
         @media screen and (max-width: 768px) {
             .container { padding: 10px; }
-            .header-title h2 { font-size: 18px; padding: 15px; }
-            .as-of-date { font-size: 12px; }
-            .filter-container { flex-direction: column; align-items: stretch; padding: 10px; gap: 8px; }
-            select, .btn { width: 100%; font-size: 13px; padding: 8px; }
-            #chart-container { min-height: 250px; margin: 10px auto; }
+            .header-title h2 { font-size: 18px; }
+            .filter-container { flex-direction: column; align-items: stretch; gap: 8px; }
+            select, .btn { width: 100%; font-size: 13px; }
 
-            /* Ubah Tabel menjadi Card yang Rapat */
             table, thead, tbody, th, td, tr { display: block; }
             thead tr { position: absolute; top: -9999px; left: -9999px; }
             
@@ -64,41 +60,38 @@
                 border-radius: 8px; 
                 background: #fff; 
                 box-shadow: 0 1px 3px rgba(0,0,0,0.08); 
-                overflow: hidden; /* Jaga agar border-radius tetap terlihat */
+                overflow: hidden;
             }
 
             td { 
                 border: none; 
                 border-bottom: 1px solid #f0f0f0; 
                 position: relative; 
-                padding: 10px 10px 10px 45% !important; /* Padding rapat */
+                padding: 10px 10px 10px 45% !important; 
                 text-align: right !important; 
                 font-size: 13px;
-                line-height: 1.4;
+                line-height: 1.2;
+                min-height: 38px;
                 box-sizing: border-box;
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
             }
 
             td:last-child { border-bottom: none; }
 
-            /* Ubah metode align Label agar rapat */
             td:before { 
                 content: attr(data-label); 
                 position: absolute; 
-                left: 10px; 
+                left: 12px; 
                 width: 40%; 
-                white-space: nowrap; 
                 font-weight: bold; 
                 color: #6a1b9a; 
                 text-align: left;
-                top: 50%; /* Tengahkan vertikal secara absolut */
-                transform: translateY(-50%);
+                white-space: nowrap;
             }
             
-            /* Jaga padding khusus untuk kolom text-right agar tidak numpuk */
-            .text-right {
-                font-weight: bold;
-                padding-right: 15px !important;
-            }
+            .text-right { font-weight: bold; color: #333; }
         }
     </style>
 </head>
@@ -137,7 +130,7 @@
 let myChart = null;
 let tableData = [];
 
-// 1. Pembersih angka tangguh (Hapus spasi/strip)
+// Pembersih Angka (Menangani spasi, koma, dan strip)
 function cleanNumber(val) {
     if (typeof val === 'number') return val;
     if (!val) return 0;
@@ -146,7 +139,7 @@ function cleanNumber(val) {
     return parseFloat(cleaned) || 0;
 }
 
-// 2. Pencari Kolom Fleksibel (Anti Gagal Deteksi Nama)
+// Pencari Kolom Fleksibel (Mencegah detail produk 0)
 function getValue(row, targetName) {
     const key = Object.keys(row).find(k => 
         k.toLowerCase().trim().replace(/\s/g, '') === targetName.toLowerCase().replace(/\s/g, '')
@@ -160,13 +153,18 @@ function formatJutaan(val) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('dateDisplay').innerText = "as of " + new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
+    // Tanggal as of (Kemarin atau Jumat jika hari Senin)
+    const today = new Date();
+    const day = today.getDay();
+    today.setDate(today.getDate() - (day === 1 ? 3 : 1));
+    document.getElementById('dateDisplay').innerText = "as of " + today.toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
+
     fetch('Dataset.json')
         .then(res => res.json())
         .then(data => {
             tableData = data;
             initializeDashboard();
-        }).catch(err => console.error("Gagal load JSON:", err));
+        }).catch(err => console.error("Gagal load data:", err));
 });
 
 function initializeDashboard() {
@@ -174,7 +172,7 @@ function initializeDashboard() {
     const columns = Object.keys(tableData[0]);
     document.getElementById('tableHead').innerHTML = columns.map(col => `<th>${col}</th>`).join('');
     
-    // Setup Filter
+    // Update Filter Options
     const branches = [...new Set(tableData.map(d => d['Main Branch']))].sort();
     document.getElementById('BranchFilter').innerHTML = '<option value="">Semua Main Branch</option>' + branches.map(v => `<option value="${v}">${v}</option>`).join('');
     
@@ -206,6 +204,7 @@ function filterAndRender() {
         const off = row['Office'];
         const totalVal = getValue(row, 'Total');
         officeMap[off] = (officeMap[off] || 0) + totalVal;
+        
         if(!breakdownMap[off]) breakdownMap[off] = { emas: 0, multiguna: 0, prohajj: 0, kpr: 0, nonCon: 0 };
         breakdownMap[off].emas += getValue(row, 'Emas');
         breakdownMap[off].multiguna += getValue(row, 'MultiGuna');
@@ -218,14 +217,9 @@ function filterAndRender() {
     if (rankVal === 'top10') sortedEntries = sortedEntries.slice(0, 10);
     else if (rankVal === 'bottom10') sortedEntries = sortedEntries.slice(-10).reverse();
 
-    // Data untuk Chart
-    let chartLabels = sortedEntries.map(e => e[0]);
-    let chartValues = sortedEntries.map(e => Math.round(e[1] / 1000000));
-    let chartDetails = sortedEntries.map(e => breakdownMap[e[0]]);
+    drawChart(sortedEntries.map(e => e[0]), sortedEntries.map(e => Math.round(e[1] / 1000000)), sortedEntries.map(e => breakdownMap[e[0]]));
 
-    drawChart(chartLabels, chartValues, chartDetails);
-
-    // Update Tabel dengan data-label untuk Mobile
+    // Update Tabel
     const tableBody = document.getElementById('tableBody');
     tableBody.innerHTML = filtered.map(row => {
         return `<tr>${Object.entries(row).map(([key, val]) => {
@@ -241,7 +235,7 @@ function drawChart(labels, values, details) {
     const ctx = document.getElementById('myBarChart').getContext('2d');
     if (myChart) myChart.destroy();
     
-    document.getElementById('chart-container').style.height = (labels.length * 40 + 100) + "px";
+    document.getElementById('chart-container').style.height = (labels.length * 40 + 80) + "px";
 
     myChart = new Chart(ctx, {
         type: 'bar',
@@ -259,7 +253,7 @@ function drawChart(labels, values, details) {
             indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
-            layout: { padding: { right: 80 } },
+            layout: { padding: { right: 100 } },
             scales: { x: { display: false }, y: { grid: { display: false } } },
             plugins: {
                 legend: { display: false },
@@ -268,12 +262,13 @@ function drawChart(labels, values, details) {
                         label: function(ctx) {
                             const d = ctx.dataset.details[ctx.dataIndex];
                             const f = (n) => Math.round(n/1000000).toLocaleString('id-ID') + " Jt";
-                            return [`Total: ${ctx.raw} Jt`, `Emas: ${f(d.emas)}`, `Multiguna: ${f(d.multiguna)}`, `Prohajj: ${f(d.prohajj)}`, `KPR: ${f(d.kpr)}`, `NonCon: ${f(d.nonCon)}`];
+                            return [`Total: ${ctx.raw} Jt`, `---`, `Emas: ${f(d.emas)}`, `Multiguna: ${f(d.multiguna)}`, `Prohajj: ${f(d.prohajj)}`, `KPR: ${f(d.kpr)}`, `Non Consumer: ${f(d.nonCon)}`];
                         }
                     }
                 },
                 datalabels: {
                     anchor: 'end', align: 'right', offset: 5,
+                    font: { weight: 'bold' },
                     formatter: (v) => v.toLocaleString('id-ID') + " Jt"
                 }
             }
@@ -283,7 +278,9 @@ function drawChart(labels, values, details) {
 
 function resetFilter() { location.reload(); }
 function openPage() { window.location.href = 'https://m-direct.vercel.app/'; }
-async function exportToExcel() { /* Fungsi Export sama seperti sebelumnya */ }
+async function exportToExcel() { 
+    // Logic export excel di sini (menggunakan ExcelJS)
+}
 </script>
 </body>
 </html>
