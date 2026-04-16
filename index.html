@@ -254,7 +254,7 @@ function draw(labels, data, dets) {
             scales: { x: { display: false }, y: { grid: { display: false }, ticks: { font: { size: 10 } } } },
             plugins: {
                 legend: { display: false },
-                datalabels: { anchor:'end', align:'right', formatter: v => v + " Jt", font: { weight:'bold', size: 10 } },
+                datalabels: { anchor:'end', align:'right', formatter: v => v.toLocaleString('id-ID') + " Jt", font: { weight:'bold', size: 10 } },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
