@@ -189,7 +189,7 @@ function updateOfficeDropdown() {
         .map(d => getVal(d, 'Office').trim())
     )].filter(v => v).sort();
 
-    document.getElementById('OfficeFilter').innerHTML = '<option value="">Semua Office</option>' + 
+    document.getElementById('OfficeFilter').innerHTML = '<option value="">All Office</option>' + 
         offices.map(v => `<option value="${v}">${v}</option>`).join('');
     render();
 }
