@@ -9,89 +9,73 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 
     <style>
-    body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; background-color: #f0f2f5; padding: 10px; margin: 0; font-size: 13px; }
-    .container { width: 100%; max-width: 1300px; margin: 0 auto; background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.08); box-sizing: border-box; }
-    
-    .header-title { 
-        color: white; 
-        background: linear-gradient(90deg, #6a1b9a, #8e24aa); 
-        padding: 10px; border-radius: 8px; margin-bottom: 15px;
-    }
-    .header-title h2 { margin: 0; font-size: 16px; font-weight: bold; }
-    .as-of-date { font-size: 13px; opacity: 0.9; display: block; margin-top: 3px; }
-    
-    /* --- FILTER CONTAINER (PC: Full 1 Baris Lurus) --- */
-    .filter-container { 
-        display: flex; 
-        flex-direction: row; /* Paksa satu baris di PC */
-        align-items: center; 
-        gap: 8px; 
-        padding: 12px; 
-        background: #f8f9fa; 
-        border-radius: 10px; 
-        margin-bottom: 15px; 
-        border: 1px solid #e9ecef; 
-    }
-
-    /* Memastikan grup dropdown dan baris mobile di PC tetap horizontal */
-    .filter-group, .mobile-row { 
-        display: flex; 
-        flex-direction: row; 
-        gap: 8px; 
-        align-items: center; 
-        flex: 3; /* Area dropdown lebih luas */
-    }
-
-    .button-group { 
-        display: flex; 
-        gap: 8px; 
-        flex: 1; /* Area tombol lebih kecil */
-    }
-
-    select, .btn { 
-        height: 40px; 
-        box-sizing: border-box; 
-        border-radius: 6px; 
-        font-size: 13px; 
-        margin: 0; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center;
-    }
-
-    select { padding: 0 8px; border: 1px solid #ddd; outline: none; flex: 1; min-width: 0; background-color: white; }
-    .btn { padding: 0 12px; border: none; cursor: pointer; font-weight: bold; color: white; flex: 1; white-space: nowrap; }
-    .reset-btn { background: #28a745; }
-    .back-btn { background: #dc3545; }
-
-    #chart-container { position: relative; width: 100%; margin: 10px auto; min-height: 250px; }
-
-    /* Table Desktop */
-    .table-container { margin-top: 15px; border-radius: 8px; overflow: hidden; border: 1px solid #eee; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th { background-color: #6a1b9a; color: white; padding: 10px 5px; border: 1px solid #5e1689; }
-    td { padding: 8px; border: 1px solid #eee; text-align: left; }
-    td.clickable { color: #6a1b9a; cursor: pointer; text-decoration: underline; font-weight: 600; }
-    .text-right { text-align: right; font-weight: bold; }
-    tr:nth-child(even) { background-color: #f9f9f9; }
-
-    /* --- RESPONSIVE HP (Mode Card & Stacked Filter) --- */
-    @media screen and (max-width: 768px) {
-        .filter-container { flex-direction: column; align-items: stretch; gap: 10px; }
-        .filter-group { flex-direction: column; width: 100%; gap: 8px; flex: none; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; background-color: #f0f2f5; padding: 10px; margin: 0; font-size: 13px; }
+        .container { width: 100%; max-width: 1300px; margin: 0 auto; background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.08); box-sizing: border-box; }
         
-        .mobile-row { width: 100%; flex: none; gap: 8px; } /* MB & Office tetap 1 baris di HP */
+        .header-title { 
+            color: white; 
+            background: linear-gradient(90deg, #6a1b9a, #8e24aa); 
+            padding: 10px; border-radius: 8px; margin-bottom: 15px;
+        }
+        .header-title h2 { margin: 0; font-size: 16px; font-weight: bold; }
+        .as-of-date { font-size: 13px; opacity: 0.9; display: block; margin-top: 3px; }
+        
+        /* Filter Container PC (Satu Baris Lurus) */
+        .filter-container { 
+            display: flex; flex-direction: row; align-items: center; gap: 8px; padding: 12px; 
+            background: #f8f9fa; border-radius: 10px; margin-bottom: 15px; border: 1px solid #e9ecef; 
+        }
 
-        #RankFilter { width: 100% !important; flex: none; }
-        .button-group { width: 100%; flex: none; }
+        .filter-group { display: flex; flex-direction: row; gap: 8px; flex: 3; align-items: center; }
+        .mobile-row { display: flex; flex-direction: row; gap: 8px; flex: 2; }
+        .button-group { display: flex; gap: 8px; flex: 1; align-items: center; }
 
-        /* Tabel Card Mode */
-        table, thead, tbody, th, td, tr { display: block !important; width: 100% !important; }
-        thead { display: none !important; }
-        tr { border: 1px solid #ddd; margin-bottom: 12px; border-radius: 8px; background: #fff; padding: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        td { border: none !important; border-bottom: 1px solid #f0f0f0 !important; position: relative; padding: 10px 10px 10px 45% !important; text-align: right !important; }
-        td:before { content: attr(data-label); position: absolute; left: 10px; width: 40%; font-weight: bold; color: #6a1b9a; text-align: left; }
-    }
+        select, .btn { 
+            height: 40px; box-sizing: border-box; border-radius: 6px; font-size: 13px; 
+            margin: 0; display: flex; align-items: center; justify-content: center;
+        }
+
+        select { padding: 0 8px; border: 1px solid #ddd; outline: none; flex: 1; min-width: 0; background-color: white; }
+        .btn { padding: 0 12px; border: none; cursor: pointer; font-weight: bold; color: white; flex: 1; white-space: nowrap; }
+        .reset-btn { background: #28a745; }
+        .back-btn { background: #dc3545; }
+
+        #chart-container { position: relative; width: 100%; margin: 10px auto; min-height: 250px; }
+
+        /* Table Desktop */
+        .table-container { margin-top: 15px; border-radius: 8px; overflow: hidden; border: 1px solid #eee; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background-color: #6a1b9a; color: white; padding: 10px 5px; border: 1px solid #5e1689; }
+        td { padding: 8px; border: 1px solid #eee; text-align: left; }
+        td.clickable { color: #6a1b9a; cursor: pointer; text-decoration: underline; font-weight: 600; }
+        .text-right { text-align: right; font-weight: bold; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+
+        /* --- RESPONSIVE HP (Mode Card) --- */
+        @media screen and (max-width: 768px) {
+            .filter-container { flex-direction: column; align-items: stretch; gap: 10px; }
+            .filter-group { flex-direction: column; width: 100%; gap: 8px; }
+            .mobile-row { width: 100%; gap: 8px; }
+            #RankFilter { width: 100% !important; }
+            .button-group { width: 100%; }
+
+            /* Tabel Jadi Card agar Detail Data Muncul */
+            table, thead, tbody, th, td, tr { display: block !important; width: 100% !important; }
+            thead { display: none !important; }
+            tr { border: 1px solid #ddd; margin-bottom: 12px; border-radius: 8px; background: #fff; padding: 5px; }
+            td { 
+                border: none !important; border-bottom: 1px solid #f0f0f0 !important; 
+                position: relative; padding: 12px 10px 12px 45% !important; 
+                text-align: right !important; min-height: 45px; display: flex !important;
+                align-items: center; justify-content: flex-end;
+            }
+            td:before { 
+                content: attr(data-label); 
+                position: absolute; left: 10px; width: 40%; 
+                font-weight: bold; color: #6a1b9a; text-align: left;
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            }
+        }
     </style>
 </head>
 <body>
@@ -114,7 +98,6 @@
                 <option value="all">Semua Data</option>
             </select>
         </div>
-
         <div class="button-group">
             <button class="btn reset-btn" onclick="resetFilter()">Reset</button>
             <button class="btn back-btn" onclick="openPage()">M-Direct</button>
@@ -190,7 +173,6 @@ function updateOfficeDropdown() {
         .filter(d => !bVal || getVal(d, 'Main Branch').trim() === bVal)
         .map(d => getVal(d, 'Office').trim())
     )].filter(v => v).sort();
-
     document.getElementById('OfficeFilter').innerHTML = '<option value="">Semua Office</option>' + 
         offices.map(v => `<option value="${v}">${v}</option>`).join('');
     render();
@@ -200,14 +182,7 @@ function render() {
     const bVal = document.getElementById('BranchFilter').value;
     const oVal = document.getElementById('OfficeFilter').value;
     const rVal = document.getElementById('RankFilter').value;
-    const header = document.getElementById('mainHeader');
-
-    if (rVal === 'top10') header.innerText = "Top 10 Booking Performance";
-    else if (rVal === 'bottom10') header.innerText = "Bottom 10 Booking Performance";
-    else if (bVal && oVal) header.innerText = `${bVal} - ${oVal}`;
-    else if (bVal) header.innerText = `Performance ${bVal}`;
-    else header.innerText = "Booking Performance Sumatera";
-
+    
     let baseFiltered = tableData.filter(d => {
         return (!bVal || getVal(d, 'Main Branch').trim() === bVal) && 
                (!oVal || getVal(d, 'Office').trim() === oVal);
@@ -219,6 +194,7 @@ function render() {
     if (rVal === 'top10') finalTableData = sortedData.slice(0, 10);
     else if (rVal === 'bottom10') finalTableData = sortedData.slice(-10).reverse();
 
+    // Mapping Data untuk Chart
     let chartLabels = finalTableData.map(d => getVal(d, 'Office').trim());
     let chartValues = finalTableData.map(d => Math.round(cleanNum(getVal(d, 'Total')) / 1000000));
     let chartDets = finalTableData.map(d => ({
@@ -229,46 +205,23 @@ function render() {
         non: cleanNum(getVal(d, 'Non Consumer'))
     }));
 
-    if (bVal && !oVal) {
-        const branchRows = tableData.filter(d => getVal(d, 'Main Branch').trim() === bVal);
-        const branchTotal = branchRows.reduce((acc, curr) => acc + cleanNum(getVal(curr, 'Total')), 0);
-        chartLabels.unshift("TOTAL " + bVal.toUpperCase());
-        chartValues.unshift(Math.round(branchTotal / 1000000));
-        chartDets.unshift({
-            emas: branchRows.reduce((acc, c) => acc + cleanNum(getVal(c, 'Emas')), 0),
-            multi: branchRows.reduce((acc, c) => acc + cleanNum(getVal(c, 'MultiGuna')), 0),
-            hajj: branchRows.reduce((acc, c) => acc + cleanNum(getVal(c, 'Prohajj')), 0),
-            kpr: branchRows.reduce((acc, c) => acc + cleanNum(getVal(c, 'KPR')), 0),
-            non: branchRows.reduce((acc, c) => acc + cleanNum(getVal(c, 'Non Consumer')), 0)
-        });
-    }
-
-    if (!oVal) {
-        const regTotal = tableData.reduce((acc, curr) => acc + cleanNum(getVal(curr, 'Total')), 0);
-        chartLabels.unshift("TOTAL REGION");
-        chartValues.unshift(Math.round(regTotal/1000000));
-        chartDets.unshift({
-            emas: tableData.reduce((acc, curr) => acc + cleanNum(getVal(curr, 'Emas')), 0),
-            multi: tableData.reduce((acc, curr) => acc + cleanNum(getVal(curr, 'MultiGuna')), 0),
-            hajj: tableData.reduce((acc, curr) => acc + cleanNum(getVal(curr, 'Prohajj')), 0),
-            kpr: tableData.reduce((acc, curr) => acc + cleanNum(getVal(curr, 'KPR')), 0),
-            non: tableData.reduce((acc, curr) => acc + cleanNum(getVal(curr, 'Non Consumer')), 0)
-        });
-    }
-
     draw(chartLabels, chartValues, chartDets);
 
+    // Render Tabel dengan ATRIBUT DATA-LABEL (PENTING UNTUK HP)
+    const columns = Object.keys(tableData[0]);
     document.getElementById('tableBody').innerHTML = finalTableData.map(row => {
-        return `<tr>${Object.entries(row).map(([k, v]) => {
-            const kc = k.trim().toUpperCase();
+        return `<tr>${columns.map(col => {
+            const val = row[col];
+            const kc = col.trim().toUpperCase();
             const isProd = ["EMAS", "MULTIGUNA", "PROHAJJ", "KPR", "NON CONSUMER"].includes(kc);
             const isNum = isProd || kc === "TOTAL";
             let cls = isNum ? 'text-right' : '';
-            let attr = '';
-            if(kc === "MAIN BRANCH") { cls+=' clickable'; attr=`onclick="clickToFilter('BranchFilter','${v.trim()}')"`; }
-            if(kc === "OFFICE") { cls+=' clickable'; attr=`onclick="clickToFilter('OfficeFilter','${v.trim()}')"`; }
-            if(isProd) cls += ' indent-label';
-            return `<td class="${cls}" ${attr} data-label="${k.trim()}">${isNum ? formatJt(v) : v}</td>`;
+            let attr = `data-label="${col.trim()}"`; // Memberi label untuk tampilan HP
+            
+            if(kc === "MAIN BRANCH") { cls+=' clickable'; attr+=` onclick="clickToFilter('BranchFilter','${val.trim()}')"`; }
+            if(kc === "OFFICE") { cls+=' clickable'; attr+=` onclick="clickToFilter('OfficeFilter','${val.trim()}')"`; }
+            
+            return `<td class="${cls}" ${attr}>${isNum ? formatJt(val) : val}</td>`;
         }).join('')}</tr>`;
     }).join('');
 }
