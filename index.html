@@ -9,71 +9,89 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; background-color: #f0f2f5; padding: 10px; margin: 0; font-size: 13px; }
-        .container { width: 100%; max-width: 1300px; margin: 0 auto; background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.08); box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; background-color: #f0f2f5; padding: 10px; margin: 0; font-size: 13px; }
+    .container { width: 100%; max-width: 1300px; margin: 0 auto; background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.08); box-sizing: border-box; }
+    
+    .header-title { 
+        color: white; 
+        background: linear-gradient(90deg, #6a1b9a, #8e24aa); 
+        padding: 10px; border-radius: 8px; margin-bottom: 15px;
+    }
+    .header-title h2 { margin: 0; font-size: 16px; font-weight: bold; }
+    .as-of-date { font-size: 13px; opacity: 0.9; display: block; margin-top: 3px; }
+    
+    /* --- FILTER CONTAINER (PC: Full 1 Baris Lurus) --- */
+    .filter-container { 
+        display: flex; 
+        flex-direction: row; /* Paksa satu baris di PC */
+        align-items: center; 
+        gap: 8px; 
+        padding: 12px; 
+        background: #f8f9fa; 
+        border-radius: 10px; 
+        margin-bottom: 15px; 
+        border: 1px solid #e9ecef; 
+    }
+
+    /* Memastikan grup dropdown dan baris mobile di PC tetap horizontal */
+    .filter-group, .mobile-row { 
+        display: flex; 
+        flex-direction: row; 
+        gap: 8px; 
+        align-items: center; 
+        flex: 3; /* Area dropdown lebih luas */
+    }
+
+    .button-group { 
+        display: flex; 
+        gap: 8px; 
+        flex: 1; /* Area tombol lebih kecil */
+    }
+
+    select, .btn { 
+        height: 40px; 
+        box-sizing: border-box; 
+        border-radius: 6px; 
+        font-size: 13px; 
+        margin: 0; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+    }
+
+    select { padding: 0 8px; border: 1px solid #ddd; outline: none; flex: 1; min-width: 0; background-color: white; }
+    .btn { padding: 0 12px; border: none; cursor: pointer; font-weight: bold; color: white; flex: 1; white-space: nowrap; }
+    .reset-btn { background: #28a745; }
+    .back-btn { background: #dc3545; }
+
+    #chart-container { position: relative; width: 100%; margin: 10px auto; min-height: 250px; }
+
+    /* Table Desktop */
+    .table-container { margin-top: 15px; border-radius: 8px; overflow: hidden; border: 1px solid #eee; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background-color: #6a1b9a; color: white; padding: 10px 5px; border: 1px solid #5e1689; }
+    td { padding: 8px; border: 1px solid #eee; text-align: left; }
+    td.clickable { color: #6a1b9a; cursor: pointer; text-decoration: underline; font-weight: 600; }
+    .text-right { text-align: right; font-weight: bold; }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+
+    /* --- RESPONSIVE HP (Mode Card & Stacked Filter) --- */
+    @media screen and (max-width: 768px) {
+        .filter-container { flex-direction: column; align-items: stretch; gap: 10px; }
+        .filter-group { flex-direction: column; width: 100%; gap: 8px; flex: none; }
         
-        .header-title { 
-            color: white; 
-            background: linear-gradient(90deg, #6a1b9a, #8e24aa); 
-            padding: 10px; border-radius: 8px; margin-bottom: 15px;
-        }
-        .header-title h2 { margin: 0; font-size: 16px; font-weight: bold; }
-        .as-of-date { font-size: 13px; opacity: 0.9; display: block; margin-top: 3px; }
-        
-        /* Layout Filter PC */
-        .filter-container { 
-            display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; padding: 12px; 
-            background: #f8f9fa; border-radius: 10px; margin-bottom: 15px; border: 1px solid #e9ecef; 
-        }
+        .mobile-row { width: 100%; flex: none; gap: 8px; } /* MB & Office tetap 1 baris di HP */
 
-        .filter-group { display: flex; gap: 8px; flex: 3; align-items: center; }
-        .button-group { display: flex; gap: 8px; flex: 1; align-items: center; }
+        #RankFilter { width: 100% !important; flex: none; }
+        .button-group { width: 100%; flex: none; }
 
-        select, .btn { 
-            height: 40px; box-sizing: border-box; border-radius: 6px; font-size: 13px; 
-            margin: 0; display: flex; align-items: center; justify-content: center;
-        }
-
-        select { padding: 0 8px; border: 1px solid #ddd; outline: none; flex: 1; min-width: 0; background-color: white; }
-        .btn { padding: 0 12px; border: none; cursor: pointer; font-weight: bold; color: white; flex: 1; white-space: nowrap; }
-        .reset-btn { background: #28a745; }
-        .back-btn { background: #dc3545; }
-
-        #chart-container { position: relative; width: 100%; margin: 10px auto; min-height: 250px; }
-
-        /* Table Desktop */
-        .table-container { margin-top: 15px; border-radius: 8px; overflow: hidden; border: 1px solid #eee; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th { background-color: #6a1b9a; color: white; padding: 10px 5px; border: 1px solid #5e1689; }
-        td { padding: 8px; border: 1px solid #eee; text-align: left; }
-        td.clickable { color: #6a1b9a; cursor: pointer; text-decoration: underline; font-weight: 600; }
-        .text-right { text-align: right; font-weight: bold; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-
-        /* --- RESPONSIVE HP (CARD MODE) --- */
-        @media screen and (max-width: 768px) {
-            .filter-container { flex-direction: column; align-items: stretch; gap: 10px; }
-            .filter-group { flex-direction: column; width: 100%; gap: 8px; }
-            
-            /* Baris 1: MB & Office */
-            .mobile-row { display: flex; gap: 8px; width: 100%; }
-            .mobile-row select { flex: 1; }
-
-            /* Baris 2: Rank Filter (Full Width) */
-            #RankFilter { width: 100% !important; flex: none; }
-
-            /* Baris 3: Buttons */
-            .button-group { width: 100%; }
-
-            /* FORCE TABLE TO CARD MODE */
-            .table-container { border: none; }
-            table, thead, tbody, th, td, tr { display: block !important; width: 100% !important; box-sizing: border-box; }
-            thead { display: none !important; } /* Sembunyikan Header */
-            tr { border: 1px solid #ddd; margin-bottom: 12px; border-radius: 8px; background: #fff; padding: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-            td { border: none !important; border-bottom: 1px solid #f0f0f0 !important; position: relative; padding: 10px 10px 10px 45% !important; text-align: right !important; min-height: 40px; }
-            td:last-child { border-bottom: none !important; }
-            td:before { content: attr(data-label); position: absolute; left: 10px; width: 40%; font-weight: bold; color: #6a1b9a; text-align: left; white-space: nowrap; }
-        }
+        /* Tabel Card Mode */
+        table, thead, tbody, th, td, tr { display: block !important; width: 100% !important; }
+        thead { display: none !important; }
+        tr { border: 1px solid #ddd; margin-bottom: 12px; border-radius: 8px; background: #fff; padding: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        td { border: none !important; border-bottom: 1px solid #f0f0f0 !important; position: relative; padding: 10px 10px 10px 45% !important; text-align: right !important; }
+        td:before { content: attr(data-label); position: absolute; left: 10px; width: 40%; font-weight: bold; color: #6a1b9a; text-align: left; }
+    }
     </style>
 </head>
 <body>
