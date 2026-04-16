@@ -238,7 +238,7 @@ function render() {
 function draw(labels, data, dets) {
     const ctx = document.getElementById('myBarChart').getContext('2d');
     if(myChart) myChart.destroy();
-    document.getElementById('chart-container').style.height = (labels.length * 35 + 60) + "px";
+    document.getElementById('chart-container').style.height = (labels.length * 40 + 60) + "px";
     myChart = new Chart(ctx, {
         type: 'bar', plugins: [ChartDataLabels],
         data: { 
@@ -250,8 +250,11 @@ function draw(labels, data, dets) {
             }] 
         },
         options: {
-            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-            scales: { x: { display: false }, y: { grid: { display: false }, ticks: { font: { size: 10 } } } },
+            indexAxis: 'y', responsive: true, maintainAspectRatio: false, layout: { 
+                // TAMBAHKAN PADDING KANAN LEBIH BESAR AGAR ANGKA TIDAK TERPOTONG
+                padding: { right: 100, left: 10 } 
+            },
+            scales: { x: { display: false }, y: { grid: { display: false }, ticks: { font: { size: 9 } } } },
             plugins: {
                 legend: { display: false },
                 datalabels: { anchor:'end', align:'right', formatter: v => v.toLocaleString('id-ID') + " Jt", font: { weight:'bold', size: 10 } },
