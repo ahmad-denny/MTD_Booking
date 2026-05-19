@@ -154,6 +154,7 @@
     }
     .toast.success { border-left-color: #2ecc71; }
     .toast.error { border-left-color: #e74c3c; }
+    .toast.info { border-left-color: #3498db; }
 
     /* Animations */
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -322,12 +323,21 @@
     input.value = '';
   }
 
+  // ================= CORS PROXY SOLUTION =================
   function loadFromUrl() {
-    const url = prompt('Masukkan URL file .m3u (pastikan server mengizinkan CORS):');
+    const url = prompt('Masukkan URL file .m3u:\n\nContoh: https://example.com/playlist.m3u');
     if (!url) return;
-    showToast('Memuat playlist...', 'info');
-    fetch(url)
-      .then(res => res.text())
+    
+    // Validasi URL
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      showToast('URL harus dimulai dengan http:// atau https://', 'error');
+      return;
+    }
+    
+    showToast('Memuat playlist dengan CORS proxy...', 'info');
+    
+    // Coba proxy utama
+    fetchWithCorsProxy(url)
       .then(text => {
         state.channels = parseM3U(text);
         extractCategories();
@@ -335,9 +345,105 @@
         state.activeCat = 'all';
         updateTabs();
         render();
-        showToast(`Berhasil memuat ${state.channels.length} channel`, 'success');
+        showToast(`✅ Berhasil memuat ${state.channels.length} channel`, 'success');
       })
-      .catch(err => showToast('Gagal memuat URL. Periksa CORS atau koneksi.', 'error'));
+      .catch(err => {
+        console.warn('Proxy utama gagal, mencoba alternatif...', err);
+        showToast('Proxy utama gagal, mencoba alternatif...', 'info');
+        tryAlternativeProxy(url);
+      });
+  }
+
+  async function fetchWithCorsProxy(url) {
+    // Daftar CORS proxy publik
+    const proxies = [
+      'https://api.allorigins.win/raw?url=',
+      'https://corsproxy.io/?',
+      'https://api.codetabs.com/v1/proxy?quest='
+    ];
+    
+    let lastError;
+    
+    for (const proxy of proxies) {
+      try {
+        const proxyUrl = proxy + encodeURIComponent(url);
+        const response = await fetch(proxyUrl, {
+          method: 'GET',
+          headers: { 
+            'Accept': '*/*',
+            'Origin': window.location.origin
+          },
+          signal: AbortSignal.timeout(15000) // Timeout 15 detik
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const text = await response.text();
+        if (text && text.length > 0) {
+          console.log(`✅ Berhasil menggunakan proxy: ${proxy}`);
+          return text;
+        }
+      } catch (error) {
+        console.warn(`Proxy ${proxy} gagal:`, error.message);
+        lastError = error;
+        // Lanjut ke proxy berikutnya
+      }
+    }
+    
+    throw lastError || new Error('Semua proxy gagal');
+  }
+
+  function tryAlternativeProxy(originalUrl) {
+    const proxies = [
+      'https://corsproxy.io/?',
+      'https://api.codetabs.com/v1/proxy?quest=',
+      'https://api.allorigins.win/raw?url='
+    ];
+    
+    let attempt = 0;
+    
+    function tryNext() {
+      if (attempt >= proxies.length) {
+        showToast('❌ Semua proxy gagal. Coba download file manual lalu upload.', 'error');
+        return;
+      }
+      
+      const proxy = proxies[attempt];
+      attempt++;
+      
+      showToast(`Mencoba proxy ${attempt}/${proxies.length}...`, 'info');
+      
+      const proxyUrl = proxy + encodeURIComponent(originalUrl);
+      
+      fetch(proxyUrl, {
+        method: 'GET',
+        headers: { 'Accept': '*/*' },
+        signal: AbortSignal.timeout(15000)
+      })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.text();
+      })
+      .then(text => {
+        if (!text || text.length === 0) throw new Error('Response kosong');
+        
+        state.channels = parseM3U(text);
+        extractCategories();
+        state.activeTab = 'all';
+        state.activeCat = 'all';
+        updateTabs();
+        render();
+        showToast(`✅ Berhasil! Memuat ${state.channels.length} channel`, 'success');
+      })
+      .catch(err => {
+        console.warn(`Proxy attempt ${attempt} gagal:`, err.message);
+        tryNext();
+      });
+    }
+    
+    tryNext();
   }
 
   function extractCategories() {
@@ -376,9 +482,9 @@
       <div class="card" onclick="playChannel('${ch.url}', '${ch.name.replace(/'/g, "\\'")}', '${ch.id}')">
         <img src="${ch.logo || 'https://via.placeholder.com/300x160/111/fff?text=TV'}" onerror="this.src='https://via.placeholder.com/300x160/111/fff?text=No+Image'" loading="lazy">
         <div class="card-body">
-          <div class="card-title">${ch.name}</div>
+          <div class="card-title">${escapeHtml(ch.name)}</div>
           <div class="card-meta">
-            <span>${ch.group}</span>
+            <span>${escapeHtml(ch.group)}</span>
             <button class="fav-btn ${state.favorites.includes(ch.id) ? 'active' : ''}" onclick="event.stopPropagation(); toggleFav('${ch.id}')">
               ${state.favorites.includes(ch.id) ? '❤️' : '🤍'}
             </button>
@@ -386,6 +492,12 @@
         </div>
       </div>
     `).join('');
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 
   function setupTabs() {
@@ -408,7 +520,7 @@
       const catContainer = document.createElement('div');
       catContainer.style.display = 'flex'; catContainer.style.gap = '8px'; catContainer.style.overflowX = 'auto';
       catContainer.innerHTML = state.categories.map(c => 
-        `<div class="tab ${state.activeCat===c?'active':''}" data-cat="${c}" style="font-size:12px;padding:4px 10px;">${c}</div>`
+        `<div class="tab ${state.activeCat===c?'active':''}" data-cat="${c}" style="font-size:12px;padding:4px 10px;">${escapeHtml(c)}</div>`
       ).join('');
       catContainer.addEventListener('click', e => {
         if (!e.target.matches('[data-cat]')) return;
