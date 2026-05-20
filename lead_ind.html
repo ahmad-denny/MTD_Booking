@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Leading Indicator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans antialiased">
+
+    <header class="bg-blue-600 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h1 class="text-xl font-bold tracking-wide">Leading Indicator Performance</h1>
+            <div class="text-sm bg-blue-700 px-3 py-1.5 rounded-lg shadow-inner text-center w-full sm:w-auto">
+                As of: <span id="asOfDate" class="font-semibold">-</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+
+        <section class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                Filter Parameter
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="filterBranchCo" class="block text-xs font-medium text-gray-600 mb-1">BranchCo</label>
+                    <select id="filterBranchCo" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition" onchange="updateBranchOptions()">
+                        <option value="ALL">-- Semua BranchCo --</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="filterBranch" class="block text-xs font-medium text-gray-600 mb-1">Branch</label>
+                    <select id="filterBranch" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition" onchange="renderDashboard()">
+                        <option value="ALL">-- Semua Branch --</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-5 rounded-xl shadow-sm">
+                <p class="text-xs font-medium opacity-80 uppercase">Total Booking</p>
+                <h3 id="kpiBooking" class="text-2xl font-bold mt-1">0</h3>
+            </div>
+            <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white p-5 rounded-xl shadow-sm">
+                <p class="text-xs font-medium opacity-80 uppercase">Total Pipeline</p>
+                <h3 id="kpiPipeline" class="text-2xl font-bold mt-1">0</h3>
+            </div>
+            <div class="bg-gradient-to-br from-amber-500 to-amber-600 text-white p-5 rounded-xl shadow-sm">
+                <p class="text-xs font-medium opacity-80 uppercase">Active Rate (Avg)</p>
+                <h3 id="kpiActiveRate" class="text-2xl font-bold mt-1">0%</h3>
+            </div>
+        </section>
+
+        <section class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h2 class="font-bold text-gray-700">Checkpoint Performance Per RM</h2>
+                <span class="text-xs text-gray-500 font-medium" id="rowCount">Showing: 0 data</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse whitespace-nowrap">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-600 text-xs font-semibold uppercase border-b border-gray-200">
+                            <th class="px-6 py-3">Nama RM</th>
+                            <th class="px-6 py-3 text-center">BranchCo</th>
+                            <th class="px-6 py-3">Branch</th>
+                            <th class="px-4 py-3 text-right">Pipeline</th>
+                            <th class="px-4 py-3 text-right">Booking</th>
+                            <th class="px-4 py-3 text-center">Active Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportTableBody" class="divide-y divide-gray-100 text-sm">
+                        </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // 1. DATA UTAMA (Ubah data di dalam array ini untuk mengganti isi NTbl)
+        const dataNTbl = [
+            { rm: "Ahmad Denny", branchCo: "Sumatera 1", branch: "Medan", pipeline: 1500000000, booking: 1200000000, activeRate: 80, tanggal: "2026-05-20" },
+            { rm: "Rian Hidayat", branchCo: "Sumatera 1", branch: "Medan", pipeline: 900000000, booking: 450000000, activeRate: 50, tanggal: "2026-05-20" },
+            { rm: "Siti Rahma", branchCo: "Sumatera 1", branch: "Banda Aceh", pipeline: 1100000000, booking: 880000000, activeRate: 80, tanggal: "2026-05-20" },
+            { rm: "Budi Santoso", branchCo: "Sumatera 2", branch: "Palembang", pipeline: 2000000000, booking: 1600000000, activeRate: 80, tanggal: "2026-05-20" },
+            { rm: "Dewi Lestari", branchCo: "Sumatera 2", branch: "Lampung", pipeline: 750000000, booking: 600000000, activeRate: 80, tanggal: "2026-05-20" },
+            { rm: "Willy Bro", branchCo: "Sumatera 2", branch: "Palembang", pipeline: 1300000000, booking: 1040000000, activeRate: 80, tanggal: "2026-05-20" }
+        ];
+
+        // Format Angka ke Rupiah / Standar Ribbon
+        function formatNumber(num) {
+            return new Intl.NumberFormat('id-ID').format(num);
+        }
+
+        // 2. INISIALISASI FILTER OPTION (Mengambil data unik dari NTbl)
+        function initFilters() {
+            const branchCoSelect = document.getElementById('filterBranchCo');
+            
+            // Dapatkan semua unique BranchCo
+            const uniqueBranchCo = [...new Set(dataNTbl.map(item => item.branchCo))];
+            
+            uniqueBranchCo.forEach(bc => {
+                let opt = document.createElement('option');
+                opt.value = bc;
+                opt.innerText = bc;
+                branchCoSelect.appendChild(opt);
+            });
+
+            updateBranchOptions();
+        }
+
+        // Mengubah pilihan Branch berdasarkan BranchCo yang dipilih (Cascading Filter)
+        function updateBranchOptions() {
+            const selectedBranchCo = document.getElementById('filterBranchCo').value;
+            const branchSelect = document.getElementById('filterBranch');
+            
+            // Reset dropdown branch
+            branchSelect.innerHTML = '<option value="ALL">-- Semua Branch --</option>';
+
+            // Filter data yang sesuai untuk mencari list Branch unik
+            const filteredData = selectedBranchCo === "ALL" 
+                ? dataNTbl 
+                : dataNTbl.filter(item => item.branchCo === selectedBranchCo);
+
+            const uniqueBranch = [...new Set(filteredData.map(item => item.branch))];
+
+            uniqueBranch.forEach(b => {
+                let opt = document.createElement('option');
+                opt.value = b;
+                opt.innerText = b;
+                branchSelect.appendChild(opt);
+            });
+
+            renderDashboard();
+        }
+
+        // 3. PROSES & TAMPILKAN DATA (Fungsi Pengganti PvtChk & ChkPnt)
+        function renderDashboard() {
+            const targetBranchCo = document.getElementById('filterBranchCo').value;
+            const targetBranch = document.getElementById('filterBranch').value;
+            const tbody = document.getElementById('reportTableBody');
+            
+            tbody.innerHTML = ''; // bersihkan tabel sebelum render
+
+            // Proses Filter Data NTbl
+            let finalData = dataNTbl.filter(item => {
+                const matchBranchCo = (targetBranchCo === "ALL" || item.branchCo === targetBranchCo);
+                const matchBranch = (targetBranch === "ALL" || item.branch === targetBranch);
+                return matchBranchCo && matchBranch;
+            });
+
+            // Set Meta As of Date dari data terbaru yang tersedia
+            if(finalData.length > 0) {
+                document.getElementById('asOfDate').innerText = finalData[0].tanggal;
+            } else {
+                document.getElementById('asOfDate').innerText = "-";
+            }
+
+            // Variabel Akumulasi KPI (Grand Total Pivot)
+            let totalPipeline = 0;
+            let totalBooking = 0;
+            let totalActiveRate = 0;
+
+            // Render baris tabel laporan
+            finalData.forEach(row => {
+                totalPipeline += row.pipeline;
+                totalBooking += row.booking;
+                totalActiveRate += row.activeRate;
+
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 transition";
+                tr.innerHTML = `
+                    <td class="px-6 py-3.5 font-medium text-gray-900">${row.rm}</td>
+                    <td class="px-6 py-3.5 text-center text-xs"><span class="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full font-medium">${row.branchCo}</span></td>
+                    <td class="px-6 py-3.5 text-gray-600">${row.branch}</td>
+                    <td class="px-4 py-3.5 text-right font-mono text-gray-700">${formatNumber(row.pipeline)}</td>
+                    <td class="px-4 py-3.5 text-right font-mono text-emerald-600 font-semibold">${formatNumber(row.booking)}</td>
+                    <td class="px-4 py-3.5 text-center">
+                        <span class="px-2 py-1 rounded text-xs font-bold ${row.activeRate >= 70 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                            ${row.activeRate}%
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Hitung Rata-rata Active Rate
+            let avgActiveRate = finalData.length > 0 ? Math.round(totalActiveRate / finalData.length) : 0;
+
+            // Update Angka di Card KPI Atas
+            document.getElementById('kpiPipeline').innerText = formatNumber(totalPipeline);
+            document.getElementById('kpiBooking').innerText = formatNumber(totalBooking);
+            document.getElementById('kpiActiveRate').innerText = avgActiveRate + "%";
+            document.getElementById('rowCount').innerText = `Showing: ${finalData.length} entries`;
+        }
+
+        // Jalankan inisialisasi saat halaman web pertama kali dimuat
+        window.onload = function() {
+            initFilters();
+        };
+    </script>
+</body>
+</html>
