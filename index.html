@@ -42,6 +42,7 @@
     .metric-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem; }
     .metric-row .label { color: var(--text-light); } .metric-row .value { font-weight: 600; font-family: 'SF Mono', 'Courier New', monospace; }
     .metric-row.gap .value.neg { color: var(--danger); font-weight: 700; } .metric-row.gap .value.pos { color: var(--success); font-weight: 700; }
+    .metric-row .label { color: var(--text-light); font-weight: 600; }
     .achievement { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); text-align: center; }
     .achievement .label { font-size: 0.8rem; color: var(--text-light); }
     .achievement .value { font-size: 1.4rem; font-weight: 800; margin: 4px 0; transition: color 0.3s; }
@@ -50,18 +51,17 @@
     .progress-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease, background 0.3s; }
     .tag { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; margin-left: 6px; background: var(--tag-bg); color: var(--tag-text); transition: background 0.3s, color 0.3s; }
     .footer { text-align: center; padding: 20px 10px; color: var(--text-light); font-size: 0.75rem; margin-top: 20px; transition: color 0.3s; }
-    .metric-row .label { color: var(--text-light); font-weight: 600; }
     @media (max-width: 600px) { .filters { grid-template-columns: 1fr; } .summary-bar { grid-template-columns: repeat(2, 1fr); } .params-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>🏦 Bank Muamalat</h1>
-    <div class="meta"><b>Leading Indicator Dashboard</b></div>
-    <div class="meta" id="selectedBranchDisplay">📍 Branch: <span id="branchNameText">Semua Branch</span></div>
-    <div class="meta">📅 Per: 18 Mei 2026 | 📆 Hari Kerja: 16</div>
-    <button id="themeToggle" class="theme-toggle">🌙 Dark</button>
-  </div>
+  <h1>🏦 Bank Muamalat</h1>
+  <div class="meta"><b>Leading Indicator Dashboard</b></div>
+  <div class="meta" id="selectedBranchDisplay">📍 <span id="branchNameText">Semua Branch</span></div>
+  <div class="meta">📅 Per: 18 Mei 2026 | 📆 Hari Kerja: 16</div>
+  <button id="themeToggle" class="theme-toggle">🌙 Dark</button>
+</div>
   <div class="filters">
     <div><label>📍 Co-Branch</label><select id="coBranchFilter"><option value="ALL">Semua Co-Branch</option><option value="BANDA ACEH">BANDA ACEH</option><option value="BENGKULU">BENGKULU</option><option value="LAMPUNG">LAMPUNG</option><option value="MEDAN BALAIKOTA">MEDAN BALAIKOTA</option><option value="MEDAN BARU">MEDAN BARU</option><option value="PADANG">PADANG</option><option value="PALEMBANG">PALEMBANG</option><option value="PANGKAL PINANG">PANGKAL PINANG</option><option value="PEKANBARU">PEKANBARU</option></select></div>
     <div><label>🏢 Branch</label><select id="branchFilter"><option value="ALL">Semua Branch</option></select></div>
@@ -138,12 +138,23 @@
     themeLabel.textContent = theme === 'dark' ? 'Dark' : 'Light';
   }
 
+  // 🔄 Update tampilan nama cabang terpilih (Co-Branch / Branch)
   function updateBranchDisplay() {
-  const coVal = coBranchSelect.value;
-  const brVal = branchSelect.value;
-  const displayText = (brVal !== 'ALL') ? brVal : (coVal !== 'ALL' ? coVal : 'Semua Branch');
-  document.getElementById('branchNameText').textContent = displayText;
-}
+    const coVal = coBranchSelect.value;
+    const brVal = branchSelect.value;
+    const branchNameText = document.getElementById('branchNameText');
+    
+    if (brVal !== 'ALL') {
+      // Jika Branch spesifik dipilih
+      branchNameText.textContent = `Branch ${brVal}`;
+    } else if (coVal !== 'ALL') {
+      // Jika hanya Co-Branch yang dipilih
+      branchNameText.textContent = `Co-Branch ${coVal}`;
+    } else {
+      // Jika semua filter di-reset
+      branchNameText.textContent = 'Semua Branch';
+    }
+  }
 
 // Update event listener yang sudah ada:
 coBranchSelect.addEventListener('change', () => { 
