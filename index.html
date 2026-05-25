@@ -125,7 +125,7 @@
 
 <!-- BAGIAN INPUT URL DATA PUSAT -->
 <div class="json-loader hidden" id="jsonLoaderBox">
-    <input type="text" id="jsonUrlInput" placeholder="Link Google Sheet (CSV) atau JSON...">
+    <input type="text" id="jsonUrlInput" placeholder="Link Google Sheet (Publikasikan ke Web - CSV)...">
     <button onclick="loadFromExternalLink()">🚀 Set Data Pusat</button>
     <span id="jsonStatus"></span>
 </div>
@@ -351,11 +351,14 @@
     for (let i = 1; i < lines.length; i++) {
       if (!lines[i]) continue;
       const obj = {};
-      const currentline = lines[i].split(","); // Asumsi CSV sederhana
+      // Split CSV dengan memperhatikan koma di dalam kutipan (simplified)
+      const currentline = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(",");
       
-      // Handle kasus kutipan CSV kompleks (opsional, simplifikasi disini)
       for (let j = 0; j < headers.length; j++) {
-        obj[headers[j]] = currentline[j] ? currentline[j].trim().replace(/"/g, '') : "";
+        let val = currentline[j] ? currentline[j].trim() : "";
+        // Hapus kutipan jika ada
+        val = val.replace(/^"|"$/g, '');
+        obj[headers[j]] = val;
       }
       result.push(obj);
     }
@@ -561,6 +564,8 @@
     }
 
     try {
+        // Fetch dengan mode no-cors tidak bisa dibaca, jadi kita harap server mengizinkan CORS
+        // Google Sheets Publish to Web biasanya mengizinkan CORS untuk CSV
         const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
         
@@ -592,7 +597,7 @@
         if (!isAutoRefresh) {
             jsonStatus.textContent = "❌ Gagal Koneksi";
             jsonStatus.className = "status-error";
-            alert("Gagal mengambil data. Pastikan Link Publik (Anyone with link can view).");
+            alert("Gagal mengambil data.\n\nPASTIKAN:\n1. Link sudah di-'Publish to Web' (bukan Share).\n2. Format dipilih 'CSV'.\n3. Link dimulai dengan https://docs.google.com...");
         }
     } finally {
         if (!isAutoRefresh) {
